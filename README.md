@@ -15,16 +15,16 @@ bind_pw = 'secret'
 root = Cursor(server, base_dn, bind_dn, bind_pw)
 
 # show attributes of root-node
-print root.attrs
+print(root.attrs)
 
-# get childs of root
-print root.childs
+# get children of root
+print(root.children)
 
 # get subtree of root
-print root.subs
+print(root.subs)
 
 # Filter uid objects from all subs
-print filter(lambda x: x['uid'], root.subs)
+print(filter(lambda x: x['uid'], root.subs))
 
 # add child node
 new_child = {
@@ -33,7 +33,8 @@ new_child = {
 }
 new_node = root.add_child('ou=node_1,dc=example,dc=org', new_child)
 new_node = root.add_child('ou=node_2', new_child)     # will auto-expand self.dn
-print new_node
+
+print(new_node)
 
 # search for an object
 root.search('ou', new_node['ou'])    # no scope defaults to onelevel
