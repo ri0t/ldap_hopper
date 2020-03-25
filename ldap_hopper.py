@@ -110,8 +110,8 @@ class Cursor(object):
         return Cursor(self.server, dn, self.__bind_dn, self.__bind_pw)
 
     @property
-    def childs(self):
-        """Obtain all childs (onelevel)
+    def children(self):
+        """Obtain all children (onelevel)
 
         :returns list:      instances of ldap_hopper.Cursor
         """
@@ -142,7 +142,7 @@ class Cursor(object):
 
     @property
     def subs(self):
-        """Obtain childs (subtree)
+        """Obtain children (subtree)
 
         :param by_attr: (optional) filter by attribute
         :returns list:  instances of ldap_hopper.Cursor
@@ -356,8 +356,8 @@ class ObjectNode(object):
         attrs = parent[0][1]
         return ObjectNode(self.server, dn, self.__bind_dn, self.__bind_pw)
 
-    def get_childs(self, by_attr=None):
-        """Obtain all childs (onelevel)
+    def get_children(self, by_attr=None):
+        """Obtain all children (onelevel)
 
         :param by_attr:     (optional) filter by attribute
         :returns list:      instances of ldap_hopper.ObjectNode
@@ -393,7 +393,7 @@ class ObjectNode(object):
         return output
 
     def get_subs(self, by_attr=None):
-        """Obtain childs (subtree)
+        """Obtain children (subtree)
 
         :param by_attr: (optional) filter by attribute
         :returns list:  instances of ldap_hopper.ObjectNode
