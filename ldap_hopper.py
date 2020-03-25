@@ -1,7 +1,7 @@
 """ldap_hopper.nodes"""
 __author__ = "Brian Wiborg <baccenfutter@c-base.org>"
 __date__ = "2013-12-01"
-__license__ = 'public domain'
+__license__ = "public domain"
 
 import ldap
 from ldap.modlist import addModlist
@@ -21,7 +21,7 @@ class Cursor(object):
         self.__bind_pw = bind_pw
 
     def __repr__(self):
-        return '<Cursor(%s)>' % self.dn
+        return "<Cursor(%s)>" % self.dn
 
     def __getitem__(self, item):
         if item in self.attrs:
@@ -41,15 +41,15 @@ class Cursor(object):
     def __qualify_server(self, server):
         """Convenience helper for qualifying hostname of server"""
         try:
-            if not server.startswith('ldap://'):
-                server = 'ldap://%s' % server
-            if not ':' in server[7:]:
-                server = server + ':389'
-            if not server.endswith('/'):
-                server = server + '/'
+            if not server.startswith("ldap://"):
+                server = "ldap://%s" % server
+            if not ":" in server[7:]:
+                server = server + ":389"
+            if not server.endswith("/"):
+                server = server + "/"
             return server
         except:
-            raise ValueError('Malformed hostname: %s' % server)
+            raise ValueError("Malformed hostname: %s" % server)
 
     @property
     def attrs(self):
@@ -67,7 +67,7 @@ class Cursor(object):
 
         old_attrs = self.attrs
         change_list = []
-        for set_k, set_v in new_attrs.iteritems():
+        for set_k, set_v in new_attrs.items():
             # make sure the value is a list
             if not isinstance(set_v, list):
                 set_v = [set_v]
@@ -99,7 +99,7 @@ class Cursor(object):
         :returns obj:   instance of ldap_hopper.Cursor
         """
         self.__initialize()
-        dn = ','.join(self.dn.split(',')[1:])
+        dn = ",".join(self.dn.split(",")[1:])
         try:
             parent = self.__session.search_s(dn, ldap.SCOPE_BASE, "objectClass=*")
         except:
@@ -129,10 +129,14 @@ class Cursor(object):
                     if isinstance(r_data, list):
                         for r in r_data:
                             dn = r[0]
-                            output.append(Cursor(self.server, dn, self.__bind_dn, self.__bind_pw))
+                            output.append(
+                                Cursor(self.server, dn, self.__bind_dn, self.__bind_pw)
+                            )
                     else:
                         dn = r_data[0]
-                        output.append(Cursor(self.server, dn, self.__bind_dn, self.__bind_pw))
+                        output.append(
+                            Cursor(self.server, dn, self.__bind_dn, self.__bind_pw)
+                        )
         self.__unbind()
         return output
 
@@ -144,23 +148,27 @@ class Cursor(object):
         :returns list:  instances of ldap_hopper.Cursor
         """
         self.__initialize()
-        filter = 'objectClass=*'
+        filter = "objectClass=*"
 
         result_id = self.__session.search(self.dn, ldap.SCOPE_SUBTREE, filter)
         output = []
         while 1:
             r_type, r_data = self.__session.result(result_id, 0)
-            if (r_data == []):
+            if r_data == []:
                 break
             else:
                 if r_type == ldap.RES_SEARCH_ENTRY:
                     if isinstance(r_data, list):
                         for r in r_data:
                             dn = r[0]
-                            output.append(Cursor(self.server, dn, self.__bind_dn, self.__bind_pw))
+                            output.append(
+                                Cursor(self.server, dn, self.__bind_dn, self.__bind_pw)
+                            )
                     else:
                         dn = r_data[0]
-                        output.append(Cursor(self.server, dn, self.__bind_dn, self.__bind_pw))
+                        output.append(
+                            Cursor(self.server, dn, self.__bind_dn, self.__bind_pw)
+                        )
         self.__unbind()
         return output
 
@@ -185,7 +193,7 @@ class Cursor(object):
         :returns obj:   instance of Cursor
         """
         if not self.dn in dn:
-            dn = '%s,%s' % (dn, self.dn)
+            dn = "%s,%s" % (dn, self.dn)
         ldif = addModlist(attrs)
 
         self.__initialize()
@@ -220,7 +228,7 @@ class Cursor(object):
         """
         if scope is None:
             scope = ldap.SCOPE_ONELEVEL
-        if scope == 'subtree':
+        if scope == "subtree":
             scope = ldap.SCOPE_SUBTREE
 
         self.__initialize()
@@ -228,17 +236,21 @@ class Cursor(object):
         output = []
         while 1:
             r_type, r_data = self.__session.result(result_id, 0)
-            if (r_data == []):
+            if r_data == []:
                 break
             else:
                 if r_type == ldap.RES_SEARCH_ENTRY:
                     if isinstance(r_data, list):
                         for r in r_data:
                             dn = r[0]
-                            output.append(Cursor(self.server, dn, self.__bind_dn, self.__bind_pw))
+                            output.append(
+                                Cursor(self.server, dn, self.__bind_dn, self.__bind_pw)
+                            )
                     else:
                         dn = r[0]
-                        output.append(Cursor(self.server, dn, self.__bind_dn, self.__bind_pw))
+                        output.append(
+                            Cursor(self.server, dn, self.__bind_dn, self.__bind_pw)
+                        )
         return output
 
     def as_tuple(self):
@@ -251,7 +263,7 @@ class Cursor(object):
 
 class ObjectNode(object):
     def __new__(cls, *args, **kwargs):
-        print "ObjectNode is deprecated, use Cursor instead!"
+        print("ObjectNode is deprecated, use Cursor instead!")
         return object.__new__(cls)
 
     def __init__(self, server, dn, bind_dn, bind_pw):
@@ -267,7 +279,7 @@ class ObjectNode(object):
         self.__bind_pw = bind_pw
 
     def __repr__(self):
-        return '<ObjectNode(%s)>' % self.dn
+        return "<ObjectNode(%s)>" % self.dn
 
     def __getitem__(self, item):
         attrs = self.get_attrs()
@@ -288,15 +300,15 @@ class ObjectNode(object):
     def __qualify_server(self, server):
         """Convenience helper for qualifying hostname of server"""
         try:
-            if not server.startswith('ldap://'):
-                server = 'ldap://%s' % server
-            if not ':' in server[7:]:
-                server = server + ':389'
-            if not server.endswith('/'):
-                server = server + '/'
+            if not server.startswith("ldap://"):
+                server = "ldap://%s" % server
+            if not ":" in server[7:]:
+                server = server + ":389"
+            if not server.endswith("/"):
+                server = server + "/"
             return server
         except:
-            raise ValueError('Malformed hostname: %s' % server)
+            raise ValueError("Malformed hostname: %s" % server)
 
     def get_attrs(self):
         """Load all attributes into local cache"""
@@ -310,7 +322,7 @@ class ObjectNode(object):
     def set_attrs(self, new_attrs):
         old_attrs = self.get_attrs()
         change_list = []
-        for set_k, set_v in new_attrs.iteritems():
+        for set_k, set_v in new_attrs.items():
             # make sure the value is a list
             if not isinstance(set_v, list):
                 set_v = [set_v]
@@ -337,7 +349,7 @@ class ObjectNode(object):
         :returns obj:   instance of ldap_hopper.ObjectNode
         """
         self.__initialize()
-        dn = ','.join(self.dn.split(',')[1:])
+        dn = ",".join(self.dn.split(",")[1:])
         parent = self.__session.search_s(dn, ldap.SCOPE_BASE, "objectClass=*")
         self.__unbind()
         dn = parent[0][0]
@@ -360,17 +372,23 @@ class ObjectNode(object):
         output = []
         while 1:
             r_type, r_data = self.__session.result(result_id, 0)
-            if (r_data == []):
+            if r_data == []:
                 break
             else:
                 if r_type == ldap.RES_SEARCH_ENTRY:
                     if isinstance(r_data, list):
                         for r in r_data:
                             dn = r[0]
-                            output.append(ObjectNode(self.server, dn, self.__bind_dn, self.__bind_pw))
+                            output.append(
+                                ObjectNode(
+                                    self.server, dn, self.__bind_dn, self.__bind_pw
+                                )
+                            )
                     else:
                         dn = r_data[0]
-                        output.append(ObjectNode(self.server, dn, self.__bind_dn, self.__bind_pw))
+                        output.append(
+                            ObjectNode(self.server, dn, self.__bind_dn, self.__bind_pw)
+                        )
         self.__unbind()
         return output
 
@@ -384,23 +402,29 @@ class ObjectNode(object):
         if by_attr:
             filter = by_attr
         else:
-            filter = 'objectClass=*'
+            filter = "objectClass=*"
 
         result_id = self.__session.search(self.dn, ldap.SCOPE_SUBTREE, filter)
         output = []
         while 1:
             r_type, r_data = self.__session.result(result_id, 0)
-            if (r_data == []):
+            if r_data == []:
                 break
             else:
                 if r_type == ldap.RES_SEARCH_ENTRY:
                     if isinstance(r_data, list):
                         for r in r_data:
                             dn = r[0]
-                            output.append(ObjectNode(self.server, dn, self.__bind_dn, self.__bind_pw))
+                            output.append(
+                                ObjectNode(
+                                    self.server, dn, self.__bind_dn, self.__bind_pw
+                                )
+                            )
                     else:
                         dn = r_data[0]
-                        output.append(ObjectNode(self.server, dn, self.__bind_dn, self.__bind_pw))
+                        output.append(
+                            ObjectNode(self.server, dn, self.__bind_dn, self.__bind_pw)
+                        )
         self.__unbind()
         return output
 
@@ -415,7 +439,7 @@ class ObjectNode(object):
         :returns obj:   instance of ObjectNode
         """
         if not self.dn in dn:
-            dn = '%s,%s' % (dn, self.dn)
+            dn = "%s,%s" % (dn, self.dn)
         ldif = addModlist(attrs)
 
         self.__initialize()
@@ -430,7 +454,7 @@ class ObjectNode(object):
         :returns None:  or passes python-ldap exception
         """
         if not self.dn in dn:
-            dn = '%s,%s' % (dn, self.dn)
+            dn = "%s,%s" % (dn, self.dn)
 
         self.__initialize()
         self.__session.delete_s(dn)
@@ -446,24 +470,30 @@ class ObjectNode(object):
         """
         if scope is None:
             scope = ldap.SCOPE_ONELEVEL
-        search_filter = '%s=%s' % (attribute, value)
+        search_filter = "%s=%s" % (attribute, value)
 
         self.__initialize()
         result_id = self.__session.search(self.dn, scope, search_filter)
         output = []
         while 1:
             r_type, r_data = self.__session.result(result_id, 0)
-            if (r_data == []):
+            if r_data == []:
                 break
             else:
                 if r_type == ldap.RES_SEARCH_ENTRY:
                     if isinstance(r_data, list):
                         for r in r_data:
                             dn = r[0]
-                            output.append(ObjectNode(self.server, dn, self.__bind_dn, self.__bind_pw))
+                            output.append(
+                                ObjectNode(
+                                    self.server, dn, self.__bind_dn, self.__bind_pw
+                                )
+                            )
                     else:
                         dn = r[0]
-                        output.append(ObjectNode(self.server, dn, self.__bind_dn, self.__bind_pw))
+                        output.append(
+                            ObjectNode(self.server, dn, self.__bind_dn, self.__bind_pw)
+                        )
         return output
 
     def as_tuple(self):
