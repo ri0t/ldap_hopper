@@ -8,7 +8,7 @@ from ldap.modlist import addModlist
 
 
 class Cursor(object):
-    def __init__(self, server, dn, bind_dn, bind_pw):
+    def __init__(self, server: str, dn: str, bind_dn: str, bind_pw: str):
         """
         :param server: LDAP server url
         :param dn: distinguishable name
@@ -23,11 +23,11 @@ class Cursor(object):
     def __repr__(self):
         return "<Cursor(%s)>" % self.dn
 
-    def __getitem__(self, item):
+    def __getitem__(self, item: any):
         if item in self.attrs:
             return self.attrs[item]
 
-    def __setitem__(self, key, value):
+    def __setitem__(self, key: str, value: any):
         self.attrs = {key: value}
 
     def __initialize(self):
@@ -39,8 +39,10 @@ class Cursor(object):
         self.__session.unbind_s()
 
     @staticmethod
-    def __qualify_server(server):
-        """Convenience helper for qualifying hostname of server"""
+    def __qualify_server(server: str):
+        """Convenience helper for qualifying hostname of server
+
+        :param server: Hostname"""
         try:
             if not server.startswith("ldap://"):
                 server = "ldap://%s" % server
@@ -63,7 +65,7 @@ class Cursor(object):
         return result
 
     @attrs.setter
-    def attrs(self, new_attrs):
+    def attrs(self, new_attrs: dict):
         assert isinstance(new_attrs, dict), "Not of type dict: {}".format(new_attrs)
 
         old_attrs = self.attrs
@@ -88,7 +90,7 @@ class Cursor(object):
             self.__session.modify_s(self.dn, change_list)
             self.__unbind()
 
-    def set_password(self, old_pw, new_pw):
+    def set_password(self, old_pw: str, new_pw: str):
         self.__initialize()
         self.__session.passwd_s(self.dn, old_pw, new_pw)
         self.__unbind()
@@ -172,7 +174,7 @@ class Cursor(object):
         self.__unbind()
         return output
 
-    def new_cursor(self, dn=None, bind_dn=None, bind_pw=None):
+    def new_cursor(self, dn: str = None, bind_dn: str = None, bind_pw: str = None):
         if dn is None:
             if bind_dn is None:
                 dn = self.dn
@@ -185,7 +187,7 @@ class Cursor(object):
 
         return Cursor(self.server, dn, bind_dn, bind_pw)
 
-    def add_child(self, dn, attrs):
+    def add_child(self, dn: str, attrs: dict):
         """Add a child-node to this object-node
 
         :param dn: either dn or rdn relative to self.dn
@@ -211,7 +213,7 @@ class Cursor(object):
         self.__unbind()
         return None
 
-    def modify(self, new_attrs):
+    def modify(self, new_attrs: dict):
         self.__initialize()
         change = ldap.modlist.modifyModlist(self.attrs, new_attrs)
         self.__session.modify_s(self.dn, change)
@@ -233,7 +235,7 @@ class Cursor(object):
         self.__initialize()
         result_id = self.__session.search(self.dn, scope, search_filter)
         output = []
-        while 1:
+        while True:
             r_type, r_data = self.__session.result(result_id, 0)
             if r_data is []:
                 break
