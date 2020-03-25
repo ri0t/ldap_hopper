@@ -10,8 +10,8 @@ from ldap.modlist import addModlist
 class Cursor(object):
     def __init__(self, server, dn, bind_dn, bind_pw):
         """
-        :param server:  LDAP server url
-        :param dn:      distinguishable name
+        :param server: LDAP server url
+        :param dn: distinguishable name
         :param bind_dn: bindDN
         :param bind_pw: password for bindDN
         """
@@ -38,17 +38,18 @@ class Cursor(object):
     def __unbind(self):
         self.__session.unbind_s()
 
-    def __qualify_server(self, server):
+    @staticmethod
+    def __qualify_server(server):
         """Convenience helper for qualifying hostname of server"""
         try:
             if not server.startswith("ldap://"):
                 server = "ldap://%s" % server
-            if not ":" in server[7:]:
+            if ":" not in server[7:]:
                 server = server + ":389"
             if not server.endswith("/"):
                 server = server + "/"
             return server
-        except:
+        except Exception:
             raise ValueError("Malformed hostname: %s" % server)
 
     @property
@@ -56,8 +57,8 @@ class Cursor(object):
         """Load all attributes into local cache"""
         self.__initialize()
         scope = ldap.SCOPE_BASE
-        filter = "objectClass=*"
-        result = dict(self.__session.search_s(self.dn, scope, filter, None)[0][1])
+        attr_filter = "objectClass=*"
+        result = dict(self.__session.search_s(self.dn, scope, attr_filter, None)[0][1])
         self.__unbind()
         return result
 
@@ -96,13 +97,13 @@ class Cursor(object):
     def parent(self):
         """Obtain parent object
 
-        :returns obj:   instance of ldap_hopper.Cursor
+        :returns obj: instance of ldap_hopper.Cursor
         """
         self.__initialize()
         dn = ",".join(self.dn.split(",")[1:])
         try:
             parent = self.__session.search_s(dn, ldap.SCOPE_BASE, "objectClass=*")
-        except:
+        except Exception:
             return None
         self.__unbind()
         dn = parent[0][0]
@@ -113,12 +114,12 @@ class Cursor(object):
     def children(self):
         """Obtain all children (onelevel)
 
-        :returns list:      instances of ldap_hopper.Cursor
+        :returns list: instances of ldap_hopper.Cursor
         """
         self.__initialize()
-        filter = "objectClass=*"
+        search_filter = "objectClass=*"
 
-        result_id = self.__session.search(self.dn, ldap.SCOPE_ONELEVEL, filter)
+        result_id = self.__session.search(self.dn, ldap.SCOPE_ONELEVEL, search_filter)
         output = []
         while 1:
             r_type, r_data = self.__session.result(result_id, 0)
@@ -144,17 +145,16 @@ class Cursor(object):
     def subs(self):
         """Obtain children (subtree)
 
-        :param by_attr: (optional) filter by attribute
-        :returns list:  instances of ldap_hopper.Cursor
+        :returns list: instances of ldap_hopper.Cursor
         """
         self.__initialize()
-        filter = "objectClass=*"
+        search_filter = "objectClass=*"
 
-        result_id = self.__session.search(self.dn, ldap.SCOPE_SUBTREE, filter)
+        result_id = self.__session.search(self.dn, ldap.SCOPE_SUBTREE, search_filter)
         output = []
         while 1:
             r_type, r_data = self.__session.result(result_id, 0)
-            if r_data == []:
+            if r_data is []:
                 break
             else:
                 if r_type == ldap.RES_SEARCH_ENTRY:
@@ -188,11 +188,11 @@ class Cursor(object):
     def add_child(self, dn, attrs):
         """Add a child-node to this object-node
 
-        :param dn:      either dn or rdn relative to self.dn
-        :param attrs:   attributes dictionary
-        :returns obj:   instance of Cursor
+        :param dn: either dn or rdn relative to self.dn
+        :param attrs: attributes dictionary
+        :returns obj: instance of Cursor
         """
-        if not self.dn in dn:
+        if self.dn not in dn:
             dn = "%s,%s" % (dn, self.dn)
         ldif = addModlist(attrs)
 
@@ -204,7 +204,7 @@ class Cursor(object):
     def delete(self):
         """Delete this object-node
 
-        :returns None:  or passes python-ldap exception
+        :returns None: or passes python-ldap exception
         """
         self.__initialize()
         self.__session.delete_s(self.dn)
@@ -221,10 +221,9 @@ class Cursor(object):
     def search(self, search_filter, scope=None):
         """Search from this node as search-base
 
-        :param attribute:   name of the attribute to look-up
-        :param value:       value of the attribute to look-up
-        :param scope:       search_scope, e.g. ldap.SCOPE_SUBTREE
-                            (defaults to ldap.SCOPE_ONELEVEL)
+        :param search_filter: 
+        :param scope: search_scope, e.g. ldap.SCOPE_SUBTREE
+                      (defaults to ldap.SCOPE_ONELEVEL)
         """
         if scope is None:
             scope = ldap.SCOPE_ONELEVEL
@@ -236,7 +235,7 @@ class Cursor(object):
         output = []
         while 1:
             r_type, r_data = self.__session.result(result_id, 0)
-            if r_data == []:
+            if r_data is []:
                 break
             else:
                 if r_type == ldap.RES_SEARCH_ENTRY:
@@ -256,9 +255,9 @@ class Cursor(object):
     def as_tuple(self):
         """Convenience method for obtaining a ldap result-like tuple
 
-        :returns tuple:     ( str(dn), dict(attrs) )
+        :returns tuple: ( str(dn), dict(attrs) )
         """
-        return (self.dn, self.attrs)
+        return self.dn, self.attrs
 
 
 class ObjectNode(object):
@@ -268,8 +267,8 @@ class ObjectNode(object):
 
     def __init__(self, server, dn, bind_dn, bind_pw):
         """
-        :param server:  LDAP server url
-        :param dn:      distinguishable name
+        :param server: LDAP server url
+        :param dn: distinguishable name
         :param bind_dn: bindDN
         :param bind_pw: password for bindDN
         """
@@ -297,25 +296,28 @@ class ObjectNode(object):
     def __unbind(self):
         self.__session.unbind_s()
 
-    def __qualify_server(self, server):
+    @staticmethod
+    def __qualify_server(server):
         """Convenience helper for qualifying hostname of server"""
         try:
             if not server.startswith("ldap://"):
                 server = "ldap://%s" % server
-            if not ":" in server[7:]:
+            if ":" not in server[7:]:
                 server = server + ":389"
             if not server.endswith("/"):
                 server = server + "/"
             return server
-        except:
+        except Exception:
             raise ValueError("Malformed hostname: %s" % server)
 
     def get_attrs(self):
         """Load all attributes into local cache"""
         self.__initialize()
         scope = ldap.SCOPE_BASE
-        filter = "objectClass=*"
-        result = dict(self.__session.search_s(self.dn, scope, filter, None)[0][1])
+        search_filter = "objectClass=*"
+        result = dict(
+            self.__session.search_s(self.dn, scope, search_filter, None)[0][1]
+        )
         self.__unbind()
         return result
 
@@ -346,7 +348,7 @@ class ObjectNode(object):
     def get_parent(self):
         """Obtain parent object
 
-        :returns obj:   instance of ldap_hopper.ObjectNode
+        :returns obj: instance of ldap_hopper.ObjectNode
         """
         self.__initialize()
         dn = ",".join(self.dn.split(",")[1:])
@@ -359,20 +361,20 @@ class ObjectNode(object):
     def get_children(self, by_attr=None):
         """Obtain all children (onelevel)
 
-        :param by_attr:     (optional) filter by attribute
-        :returns list:      instances of ldap_hopper.ObjectNode
+        :param by_attr: (optional) filter by attribute
+        :returns list: instances of ldap_hopper.ObjectNode
         """
         self.__initialize()
         if by_attr:
-            filter = by_attr
+            search_filter = by_attr
         else:
-            filter = "objectClass=*"
+            search_filter = "objectClass=*"
 
-        result_id = self.__session.search(self.dn, ldap.SCOPE_ONELEVEL, filter)
+        result_id = self.__session.search(self.dn, ldap.SCOPE_ONELEVEL, search_filter)
         output = []
         while 1:
             r_type, r_data = self.__session.result(result_id, 0)
-            if r_data == []:
+            if r_data is []:
                 break
             else:
                 if r_type == ldap.RES_SEARCH_ENTRY:
@@ -396,19 +398,19 @@ class ObjectNode(object):
         """Obtain children (subtree)
 
         :param by_attr: (optional) filter by attribute
-        :returns list:  instances of ldap_hopper.ObjectNode
+        :returns list: instances of ldap_hopper.ObjectNode
         """
         self.__initialize()
         if by_attr:
-            filter = by_attr
+            search_filter = by_attr
         else:
-            filter = "objectClass=*"
+            search_filter = "objectClass=*"
 
-        result_id = self.__session.search(self.dn, ldap.SCOPE_SUBTREE, filter)
+        result_id = self.__session.search(self.dn, ldap.SCOPE_SUBTREE, search_filter)
         output = []
         while 1:
             r_type, r_data = self.__session.result(result_id, 0)
-            if r_data == []:
+            if r_data is []:
                 break
             else:
                 if r_type == ldap.RES_SEARCH_ENTRY:
@@ -434,11 +436,11 @@ class ObjectNode(object):
     def add_child(self, dn, attrs):
         """Add a child-node to this object-node
 
-        :param dn:      either dn or rdn relative to self.dn
-        :param attrs:   attributes dictionary
-        :returns obj:   instance of ObjectNode
+        :param dn: either dn or rdn relative to self.dn
+        :param attrs: attributes dictionary
+        :returns obj: instance of ObjectNode
         """
-        if not self.dn in dn:
+        if self.dn not in dn:
             dn = "%s,%s" % (dn, self.dn)
         ldif = addModlist(attrs)
 
@@ -450,10 +452,10 @@ class ObjectNode(object):
     def del_child(self, dn):
         """Delete a child-node of this object-node
 
-        :param dn:      either dn or rdn relative to self.dn
-        :returns None:  or passes python-ldap exception
+        :param dn: either dn or rdn relative to self.dn
+        :returns None: or passes python-ldap exception
         """
-        if not self.dn in dn:
+        if self.dn not in dn:
             dn = "%s,%s" % (dn, self.dn)
 
         self.__initialize()
@@ -463,9 +465,9 @@ class ObjectNode(object):
     def search(self, attribute, value, scope=None):
         """Search from this node as search-base
 
-        :param attribute:   name of the attribute to look-up
-        :param value:       value of the attribute to look-up
-        :param scope:       search_scope, e.g. ldap.SCOPE_SUBTREE
+        :param attribute: name of the attribute to look-up
+        :param value: value of the attribute to look-up
+        :param scope: search_scope, e.g. ldap.SCOPE_SUBTREE
                             (defaults to ldap.SCOPE_ONELEVEL)
         """
         if scope is None:
@@ -477,7 +479,7 @@ class ObjectNode(object):
         output = []
         while 1:
             r_type, r_data = self.__session.result(result_id, 0)
-            if r_data == []:
+            if r_data is []:
                 break
             else:
                 if r_type == ldap.RES_SEARCH_ENTRY:
@@ -499,6 +501,6 @@ class ObjectNode(object):
     def as_tuple(self):
         """Convenience method for obtaining a ldap result-like tuple
 
-        :returns tuple:     ( str(dn), dict(attrs) )
+        :returns tuple: ( str(dn), dict(attrs) )
         """
-        return (self.dn, self.get_attrs())
+        return self.dn, self.get_attrs()
